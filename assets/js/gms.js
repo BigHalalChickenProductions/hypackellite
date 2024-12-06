@@ -155,8 +155,19 @@ function displayGame(game) {
 	const titleColor = isBroken ? "red" : "inherit"; // Set title color based on broken status
 	const gameCard = document.createElement("div");
 
+	let gameImageSource;
+	let cloudicon = false;
+	if (game.OnOtherServer === true) {
+		const cloudflaredUrl = "https://hypackelcloudflare.pages.dev";
+		gameImageSource = cloudflaredUrl + game.imageSrc;
+		cloudicon = true;
+	} else {
+		gameImageSource = game.imageSrc;
+	}
+
 	window.handleImageError = (event) => {
-		event.target.src = "/fork/image-placeholder.png"; // Replace with placeholder image source
+		event.target.src =
+			"https://dummyimage.com/600x400/1c1c1c/ffffff&text=No+Image"; // Replace with placeholder image source
 		event.target.onerror = null; // Remove the error handler to prevent infinite loops
 	};
 
@@ -172,13 +183,21 @@ function displayGame(game) {
 	game.openJustRedirect = game.openJustRedirect === true;
 
 	gameCard.innerHTML = `
-        <div id="launchgame" data-url="${game.url}" data-justOpen="${game.openJustRedirect}" data-name="${game.name}" class="app-card">
-            <img class="app-image" id="app-image" src="${game.imageSrc}" alt="" onerror="handleImageError(event)">
-            <br>
-            <h1 style="color: ${titleColor};" id="gme-name" class="title gms-title">${game.name}</h1>
-           ${tagsHTML ? `<p class="game-tags-color-switch">${tagsHTML}</p>` : ""} <!-- Conditionally include tags HTML -->
+    <div id="launchgame" data-url="${game.url}" data-justOpen="${game.openJustRedirect}" data-name="${game.name}" class="app-card">
+        <div style="position: relative; display: inline-block;">
+            <img class="app-image" id="app-image" src="${gameImageSource}" alt="" onerror="handleImageError(event)">
+            ${
+							cloudicon
+								? `
+            <i class="fa fa-cloud" style="position: absolute; top: 10px; right: 10px; font-size: 20px; color: white;" title="Cloud Indicator"></i>
+            `
+								: ""
+						}
         </div>
-    `;
+        <br>
+        <h1 style="color: ${titleColor};" id="gme-name" class="title gms-title">${game.name}</h1>
+    </div>
+`;
 
 	gameList.appendChild(gameCard);
 }
@@ -217,9 +236,7 @@ document.addEventListener("click", (event) => {
 
 function getRecentPlays() {
 	const recentPlaysJSON = localStorage.getItem("recentPlays");
-	console.log("Recent Plays JSON:", recentPlaysJSON);
 	const recentPlays = recentPlaysJSON ? JSON.parse(recentPlaysJSON) : [];
-	console.log("Recent Plays:", recentPlays);
 	return recentPlays;
 }
 
@@ -337,51 +354,20 @@ document.addEventListener("DOMContentLoaded", () => {
 										(game) => game.name === firstItem,
 									);
 									if (matchedGame) {
-										// console.log('Matching game:', matchedGame);
-										// console.log("Image Source:", matchedGame.imageSrc);
-										// Select the .full-image-container element
 										const imageContainer = document.querySelector(
 											".full-image-container",
 										);
 
-										imageContainer.style.backgroundImage = `url('${matchedGame.imageSrc}')`;
+										// Check if OnOtherServer is true
+										let imageUrl = matchedGame.imageSrc;
 
-										if (
-											localStorage.getItem("likesscreen") == null ||
-											localStorage.getItem("likesscreen") == "true"
-										) {
-											document.getElementById(
-												"particles-js",
-											).style.backgroundImage = `url(${matchedGame.imageSrc})`;
-											if (localStorage.getItem("likesscreen") == "true") {
-												// .style.backgroundColor = "rgba(0,0,0,0.8)";
-											}
-										} else {
-											var script = document.createElement("script");
-											script.type = "text/javascript";
-											script.src = "/assets/js/selectwithoutselect.js";
-											document.head.appendChild(script);
+										if (matchedGame.OnOtherServer === true) {
+											const cloudflareUrl =
+												"https://hypackelcloudflare.pages.dev";
+												imageUrl = `${cloudflareUrl}${imageUrl}`;
 										}
-										var overlay = document.getElementById("particles-js");
-										overlay.style.backgroundSize = "cover";
-										overlay.style.backgroundPosition = "center";
 
-										// Create and apply styles for overlay using pseudo-element ::before
-										var overlayStyle = document.createElement("style");
-										overlayStyle.innerHTML = `
-                        #particles-js::before {
-                            content: "";
-                            position: absolute;
-                            top: 0;
-                            left: 0;
-                            width: 100%;
-                            height: 100%;
-                            background: linear-gradient(to bottom, rgba(28, 28, 28, 0), #171717);
-                            z-index: 0; /* Ensure overlay is below content */
-                        }
-                    `;
-
-										document.head.appendChild(overlayStyle);
+										imageContainer.style.backgroundImage = `url('${imageUrl}')`;
 									} else {
 										console.log("No matching game found.");
 									}
@@ -466,11 +452,22 @@ document.addEventListener("DOMContentLoaded", () => {
 		);
 
 		const image = document.createElement("img");
-		image.src = game.imageSrc;
+
+
+		// Check if OnOtherServer is true
+		let imageUrl = game.imageSrc;
+
+		if (game.OnOtherServer === true) {
+			const cloudflareUrl =
+				"https://hypackelcloudflare.pages.dev";
+				imageUrl = `${cloudflareUrl}${imageUrl}`;
+		}
+
+		image.src = imageUrl;
 		image.alt = resultString;
 		image.title = resultString;
 		image.onerror = function () {
-			this.src = "/fork/image-placeholder.png";
+			this.src = "https://dummyimage.com/600x400/1c1c1c/ffffff&text=No+Image";
 		};
 
 		const overlay = document.createElement("div");
